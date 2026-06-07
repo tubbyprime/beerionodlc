@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mario Kart Randomizer</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#f97316;--muted:#9ca3af;color-scheme:dark}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#071126 0%,#051126 100%);margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:#e6eef6}
+    .card{background:rgba(255,255,255,0.03);border-radius:12px;padding:20px;max-width:760px;width:100%;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    h1{margin:0 0 8px;font-size:20px}
+    p{margin:0 0 16px;color:var(--muted)}
+    .flex{display:flex;gap:12px;flex-wrap:wrap}
+    button{background:var(--accent);border:0;color:#051126;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer}
+    .secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#cfe7ff;font-weight:600}
+    .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    .box{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;min-height:120px}
+    ul{margin:8px 0 0;padding-left:18px}
+    li{margin:6px 0}
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+    @media (max-width:700px){.cols{grid-template-columns:1fr}}
+    .small{font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="card" role="application" aria-label="Mario Kart Randomizer">
+    <h1>Mario Kart Randomizer</h1>
+    <p class="small">Press <strong>R</strong>, <strong>Enter</strong>, or <strong>Space</strong>, or click <em>Reroll</em>. Tracks drawn without replacement.</p>
+
+    <div class="flex" style="align-items:center;margin-bottom:6px">
+      <button id="rerollBtn">Reroll</button>
+      <button id="copyBtn" class="secondary">Copy results</button>
+      <button id="downloadBtn" class="secondary">Download .txt</button>
+    </div>
+
+    <div class="cols" aria-live="polite">
+      <div class="box">
+        <strong>Mario Kart 8 Deluxe (no Tour maps)</strong>
+        <ul id="mk8list" aria-label="Mario Kart 8 Deluxe selection"></ul>
+      </div>
+      <div class="box">
+        <strong>Mario Kart World</strong>
+        <ul id="mkworldlist" aria-label="Mario Kart World selection"></ul>
+      </div>
+    </div>
+
+    <footer>
+      <div class="small">Random source: Web Crypto API when available (more unpredictable than Math.random).</div>
+    </footer>
+  </div>
+
+  <script>
+    // === TRACK LISTS ===
+    const mk8Tracks = [
+      // Mushroom Cup
+      "Mario Kart Stadium (Mushroom Cup)","Water Park (Mushroom Cup)","Sweet Sweet Canyon (Mushroom Cup)","Thwomp Ruins (Mushroom Cup)",
+      // Flower Cup
+      "Mario Circuit (Flower Cup)","Toad Harbor (Flower Cup)","Twisted Mansion (Flower Cup)","Shy Guy Falls (Flower Cup)",
+      // Star Cup
+      "Sunshine Airport (Star Cup)","Dolphin Shoals (Star Cup)","Electrodrome (Star Cup)","Mount Wario (Star Cup)",
+      // Special Cup
+      "Cloudtop Cruise (Special Cup)","Bone-Dry Dunes (Special Cup)","Bowser's Castle (Special Cup)","Rainbow Road (Special Cup)",
+      // Shell Cup
+      "Moo Moo Meadows (Wii) (Shell Cup)","Mario Circuit (GBA) (Shell Cup)","Cheep Cheep Beach (DS) (Shell Cup)","Toad's Turnpike (N64) (Shell Cup)",
+      // Banana Cup
+      "Dry Dry Desert (GCN) (Banana Cup)","Donut Plains 3 (SNES) (Banana Cup)","Royal Raceway (N64) (Banana Cup)","DK Jungle (3DS) (Banana Cup)",
+      // Leaf Cup
+      "Wario Stadium (DS) (Leaf Cup)","Sherbet Land (GCN) (Leaf Cup)","Music Park (3DS) (Leaf Cup)","Yoshi Valley (N64) (Leaf Cup)",
+      // Lightning Cup
+      "Tick-Tock Clock (DS) (Lightning Cup)","Piranha Plant Slide (3DS) (Lightning Cup)","Grumble Volcano (Wii) (Lightning Cup)","Rainbow Road (N64) (Lightning Cup)",
+      // Egg Cup
+      "Yoshi Circuit (GCN) (Egg Cup)","Excitebike Arena (Egg Cup)","Dragon Driftway (Egg Cup)","Mute City (Egg Cup)",
+      // Triforce Cup
+      "Wario's Gold Mine (Wii) (Triforce Cup)","Rainbow Road (SNES) (Triforce Cup)","Ice Ice Outpost (Triforce Cup)","Hyrule Circuit (Triforce Cup)",
+      // Crossing Cup
+      "Baby Park (GCN) (Crossing Cup)", // REMOVED
+      "Cheese Land (GBA) (Crossing Cup)","Wild Woods (Crossing Cup)","Animal Crossing (Crossing Cup)",
+      // Bell Cup
+      "Neo Bowser City (3DS) (Bell Cup)","Ribbon Road (GBA) (Bell Cup)","Super Bell Subway (Bell Cup)","Big Blue (Bell Cup)",
+      // Golden Dash Cup
+      "Paris Promenade (Tour)", // REMOVED
+      "Toad Circuit (3DS) (Golden Dash Cup)","Choco Mountain (N64) (Golden Dash Cup)","Coconut Mall (Wii) (Golden Dash Cup)",
+      // Lucky Cat Cup
+      "Tokyo Blur (Tour)", // REMOVED
+      "Shroom Ridge (DS) (Lucky Cat Cup)","Sky Garden (GBA) (Lucky Cat Cup)","Ninja Hideaway (Lucky Cat Cup)",
+      // Turnip Cup
+      "New York Minute (Tour)", // REMOVED
+      "Mario Circuit 3 (SNES) (Turnip Cup)","Kalimari Desert (N64) (Turnip Cup)","Waluigi Pinball (DS) (Turnip Cup)",
+      // Propeller Cup
+      "Sydney Sprint (Tour)", // REMOVED
+      "Snow Land (GBA) (Propeller Cup)","Mushroom Gorge (Wii) (Propeller Cup)","Sky-High Sundae (Propeller Cup)", // REMOVED
+      // Rock Cup
+      "London Loop (Tour)", // REMOVED
+      "Boo Lake (GBA) (Rock Cup)","Rock Rock Mountain (3DS) (Rock Cup)","Maple Treeway (Wii) (Rock Cup)",
+      // Moon Cup
+      "Berlin Byways (Tour)", // REMOVED
+      "Peach Gardens (DS) (Moon Cup)","Merry Mountain (Moon Cup)","Rainbow Road (3DS) (Moon Cup)",
+      // Fruit Cup
+      "Amsterdam Drift (Tour)", // REMOVED
+      "Riverside Park (GBA) (Fruit Cup)","DK Summit (Wii) (Fruit Cup)","Yoshi's Island (Fruit Cup)",
+      // Boomerang Cup
+      "Bangkok Rush (Tour)", // REMOVED
+      "Mario Circuit (DS) (Boomerang Cup)","Waluigi Stadium (GCN) (Boomerang Cup)","Singapore Speedway (Tour)", // REMOVED
+      // Feather Cup
+      "Athens Dash (Tour)", // REMOVED
+      "Daisy Cruiser (GCN) (Feather Cup)","Moonview Highway (Wii) (Feather Cup)","Squeaky Clean Sprint (Feather Cup)",
+      // Cherry Cup
+      "Los Angeles Laps (Tour)", // REMOVED
+      "Sunset Wilds (GBA) (Cherry Cup)","Koopa Cape (Wii) (Cherry Cup)","Vancouver Velocity (Tour)", // REMOVED
+      // Acorn Cup
+      "Rome Avanti (Tour)", // REMOVED
+      "DK Mountain (GCN) (Acorn Cup)","Daisy Circuit (Wii) (Acorn Cup)","Piranha Plant Cove (Acorn Cup)",
+      // Spiny Cup
+      "Madrid Drive (Tour)", // REMOVED
+      "Rosalina's Ice World (3DS) (Spiny Cup)","Bowser Castle 3 (SNES) (Spiny Cup)","Rainbow Road (Wii) (Spiny Cup)"
+    ].filter(t => !t.includes("Tour") && !t.includes("Baby Park") && !t.includes("Sky-High Sundae"));
+
+    const mkWorldTracks = [
+      "Mario Bros. Circuit","Crown City","Whistlestop Summit","DK Spaceport",
+      "Desert Hills","Shy Guy Bazaar","Wario Stadium","Airship Fortress",
+      "DK Pass","Starview Peak","Wario Shipyard",
+      "Faraway Oasis","Peach Stadium","Peach Beach","Salty Salty Speedway",
+      "Dino Dino Jungle","Great ? Block Ruins","Cheep Cheep Falls",
+      "Dandelion Depths","Boo Cinema","Dry Bones Burnout",
+      "Moo Moo Meadows","Choco Mountain","Toad's Factory","Bowser's Castle",
+      "Acorn Heights","Mario Circuit (SNES)"
+    ].filter(t => !t.includes("Rainbow Road"));
+
+    // === RNG helpers ===
+    function rnd() {
+      if (window.crypto && crypto.getRandomValues) {
+        return crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
+      }
+      return Math.random();
+    }
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rnd() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function sample(arr, n) {
+      return shuffle(arr).slice(0, n);
+    }
+
+    // === UI wiring ===
+    const mk8ListEl = document.getElementById('mk8list');
+    const mkworldListEl = document.getElementById('mkworldlist');
+    const rerollBtn = document.getElementById('rerollBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    function renderSelection() {
+      const mk8 = sample(mk8Tracks, 4);
+      const mkw = sample(mkWorldTracks, 4);
+
+      mk8ListEl.innerHTML = mk8.map(t => `<li>${t}</li>`).join('');
+      mkworldListEl.innerHTML = mkw.map(t => `<li>${t}</li>`).join('');
+
+      return {
+        mk8, mkw,
+        text:
+`Mario Kart 8 Deluxe (no Tour maps, no Sky-High Sundae, no Baby Park):
+- ${mk8.join('\n- ')}
+
+Mario Kart World (no Rainbow Road):
+- ${mkw.join('\n- ')}`
+      };
+    }
+
+    let lastResult = renderSelection();
+
+    rerollBtn.addEventListener('click', () => { lastResult = renderSelection(); });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'r' || e.key === 'R' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        lastResult = renderSelection();
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        const text = lastResult && lastResult.text ? lastResult.text : renderSelection().text;
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(()=> copyBtn.textContent = 'Copy results', 1200);
+      } catch {
+        alert('Copy failed — browser denied clipboard access. You can still download the .txt file.');
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const content = lastResult && lastResult.text ? lastResult.text : renderSelection().text;
+      const blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mk_random_tracks.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
